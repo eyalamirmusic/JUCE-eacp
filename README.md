@@ -157,7 +157,6 @@ Dependencies (eacp and JUCE) are fetched by CPM; nothing needs installing first.
 | Option | Default | |
 | --- | --- | --- |
 | `JUCE_EACP_ENABLE_EXAMPLES` | on when top-level | Build `Plugins/` |
-| `JUCE_EACP_COPY_PLUGIN_AFTER_BUILD` | `ON` | Copy built plugins into the OS plugin folders so a DAW picks them up |
 | `EACP_BUILD_WEBVIEW` | `OFF` here | eacp's WebView module — turn on for a WebView editor |
 
 ## Supported platforms

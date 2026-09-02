@@ -39,15 +39,14 @@ jobs:
         with:
           arch: ${{ matrix.msvc-arch }}
 
-      # COPY_PLUGIN_AFTER_BUILD off: a CI runner has no DAW to hand the
-      # artefacts to, and the copy step is one more thing that can fail for a
-      # reason nobody cares about here.
+      # The examples copy themselves into the OS plugin folders after each
+      # build, here as well as on a developer's machine — a runner is thrown
+      # away afterwards, so there is nothing to keep clean.
       - name: Configure
         run: >
           cmake -G Ninja -B build
           -DCMAKE_BUILD_TYPE=Debug
           -DEACP_UNITY_BUILD=OFF
-          -DJUCE_EACP_COPY_PLUGIN_AFTER_BUILD=OFF
           ${{ matrix.cmake-flags }}
 
       - name: Build

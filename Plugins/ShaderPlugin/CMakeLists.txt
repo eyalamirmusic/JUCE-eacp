@@ -8,7 +8,7 @@ juce_add_plugin(ShaderPlugin
         IS_SYNTH FALSE
         NEEDS_MIDI_INPUT FALSE
         NEEDS_MIDI_OUTPUT FALSE
-        COPY_PLUGIN_AFTER_BUILD ${JUCE_EACP_COPY_PLUGIN_AFTER_BUILD})
+        COPY_PLUGIN_AFTER_BUILD TRUE)
 
 target_sources(ShaderPlugin PRIVATE
         PluginProcessor.cpp
