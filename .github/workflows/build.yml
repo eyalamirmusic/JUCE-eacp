@@ -1,0 +1,54 @@
+name: Build
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: macOS Universal Binary
+            os: macos-latest
+            cmake-flags: '-DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"'
+          - name: Windows MSVC
+            os: windows-latest
+            msvc-arch: x64
+            cmake-flags: ''
+          - name: Windows Clang
+            os: windows-latest
+            msvc-arch: x64
+            cmake-flags: '-DCMAKE_C_COMPILER=clang-cl -DCMAKE_CXX_COMPILER=clang-cl'
+          - name: Windows MSVC ARM64
+            os: windows-11-arm
+            msvc-arch: arm64
+            cmake-flags: ''
+
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up MSVC environment
+        if: runner.os == 'Windows'
+        uses: egor-tensin/vs-shell@54e4148eac794e4580591c2e0b7750f14b7891fc # v2
+        with:
+          arch: ${{ matrix.msvc-arch }}
+
+      # COPY_PLUGIN_AFTER_BUILD off: a CI runner has no DAW to hand the
+      # artefacts to, and the copy step is one more thing that can fail for a
+      # reason nobody cares about here.
+      - name: Configure
+        run: >
+          cmake -G Ninja -B build
+          -DCMAKE_BUILD_TYPE=Debug
+          -DEACP_UNITY_BUILD=OFF
+          -DJUCE_EACP_COPY_PLUGIN_AFTER_BUILD=OFF
+          ${{ matrix.cmake-flags }}
+
+      - name: Build
+        run: cmake --build build
