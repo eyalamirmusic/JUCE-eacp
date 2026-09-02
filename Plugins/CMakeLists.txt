@@ -15,3 +15,10 @@ add_subdirectory(SpectrumPlugin)
 # its own knob, its own bypass and its own meter — and a layout that reflows
 # under the host's resize, so all four surfaces move at once.
 add_subdirectory(RackPlugin)
+
+# All three above keep the two frameworks in separate rectangles, because a
+# native surface draws over any JUCE component it overlaps. This one puts them
+# in the same rectangle instead: the surface is given a group opacity, so the
+# JUCE panel underneath composites through the shader, and a slider sweeps
+# between the two while both halves keep animating.
+add_subdirectory(BlendPlugin)

@@ -55,9 +55,19 @@ that paints goes in the same slot.
 One caveat, and it is the same one that applies to an OpenGL context or a web
 view: a native surface draws over any JUCE component it overlaps, whatever the
 z-order says. Give it its own rectangle and put JUCE widgets beside it, not on
-it. All three examples do exactly that — the third one four times over, with the
-surface a tile in the middle of each panel and the panel's widgets arranged
-around it.
+it. The first three examples do exactly that — the third one four times over,
+with the surface a tile in the middle of each panel and the panel's widgets
+arranged around it.
+
+"Draws over", though, is the compositor's answer for an *opaque* surface, and a
+surface does not have to be opaque. `eacp::Graphics::View::setOpacity` is group
+opacity for a whole view — chrome, children and GPU content — and what it
+composites over is the layer behind, which in a plugin is the JUCE peer's own
+layer, holding everything JUCE just painted. Turn it down and the JUCE panel
+comes through the shader, still repainting, with no readback and no shared
+texture. The fourth example is built on that. What it does not buy back is the
+mouse: the platform hit-tests the surface before JUCE sees the event, so a JUCE
+control under a visible surface can be seen and not touched.
 
 `Lib/eacp_juce/Helpers/Conversions.h` is the rest of the module: `toEACP` /
 `toJUCE` for points, rectangles and colours, since both frameworks have all
@@ -65,8 +75,9 @@ three and an editor crosses between them constantly.
 
 ## The examples
 
-Three. The second is the first with something real to draw; the third is both of
-them four times over, inside a UI that looks like a plugin.
+Four. The second is the first with something real to draw; the third is both of
+them four times over, inside a UI that looks like a plugin; the fourth stops
+giving the surface a rectangle of its own.
 
 ### `Plugins/ShaderPlugin`
 
@@ -207,7 +218,56 @@ panel that is 480 draws a second for four backdrops. The cap costs nothing
 visible — the skipped ticks fold into the next frame's delta and everything here
 is delta-scaled.
 
-Formats built for all three: AU, VST3 and Standalone.
+### `Plugins/BlendPlugin`
+
+The other three keep the two frameworks in separate rectangles. This one puts
+them in the same rectangle.
+
+The stage is a single JUCE drawing — a grid, five rings, a level's worth of
+spokes and a sweep hand — painted edge to edge, and the eacp surface covers the
+right half of it. The rings are centred on the seam, so every curve runs out
+from under the shader into the open and the two halves can be compared on the
+same line. `Blend` sweeps the right half between them:
+
+```cpp
+void AuroraView::setBlend(float amount)
+{
+    blend = std::clamp(amount, 0.f, 1.f);
+
+    setOpacity(blend);          // the whole mechanism
+
+    const auto lit = blend > 0.f;
+
+    if (lit != isVisible())
+    {
+        setVisible(lit);        // not the same as opacity 0
+        setContinuous(lit);
+    }
+}
+```
+
+`setVisible` is there because a fully transparent view is still a live view: the
+compositor keeps it in the tree and the display link keeps waking to render a
+picture nobody can see. It also hands the mouse back, a hidden surface not being
+hit-tested.
+
+Everything JUCE paints under the surface keeps animating while it is under
+there — this is the OS compositing two live layers, not a picture of one pasted
+over the other — and `blend` is an ordinary automatable parameter, so the
+opacity is plugin state a host can automate and a preset can carry.
+
+Two things it does not get you, and the example is arranged around both:
+
+- **Uniform opacity, not a per-pixel alpha channel.** The surface fades as one.
+  A shader writing alpha per fragment does not punch holes in itself: on macOS
+  the `CAMetalLayer` behind a `GPUView` is opaque, so its alpha channel is
+  discarded, and eacp has no switch for that. Which is why the aurora is mostly
+  dark and the stage is painted brighter than the header — at blend 0.5 the
+  shader's black background is a 50% black wash over the JUCE drawing, and
+  anything drawn at the header's contrast would vanish under it.
+- **No mouse.** Both sliders live in the strip below the stage, not on it.
+
+Formats built for all four: AU, VST3 and Standalone.
 
 ## Building
 
