@@ -55,16 +55,20 @@ that paints goes in the same slot.
 One caveat, and it is the same one that applies to an OpenGL context or a web
 view: a native surface draws over any JUCE component it overlaps, whatever the
 z-order says. Give it its own rectangle and put JUCE widgets beside it, not on
-it. The example does exactly that.
+it. Both examples do exactly that.
 
 `Lib/eacp_juce/Helpers/Conversions.h` is the rest of the module: `toEACP` /
 `toJUCE` for points, rectangles and colours, since both frameworks have all
 three and an editor crosses between them constantly.
 
-## The example
+## The examples
 
-`Plugins/ShaderPlugin` is a gain plugin whose editor is an animated GPU shader,
-with a JUCE slider beside it driving the audio the shader reacts to.
+Two, and the second is the first with something real to draw.
+
+### `Plugins/ShaderPlugin`
+
+A gain plugin whose editor is an animated GPU shader, with a JUCE slider beside
+it driving the audio the shader reacts to.
 
 The shader is a C++ struct, not a `.metal` file and a `.hlsl` file that have to
 be kept saying the same thing — eacp's EDSL records a graph of value handles and
@@ -99,7 +103,47 @@ two threads is one relaxed atomic, written once per block by `processBlock` and
 read once per rendered frame by the view's `update()` — no lock, no allocation,
 nothing on the audio thread that can block.
 
-Formats built: AU, VST3 and Standalone.
+### `Plugins/SpectrumPlugin`
+
+A visualizer: the incoming audio goes through an FFT, and the spectrum that
+comes out is what the shader draws. The audio itself is untouched — this one is
+a tap, so its two parameters shape the picture rather than the sound.
+
+A spectrum is a curve rather than a number, which is the one thing about the GPU
+side that differs. It does not fit in a uniform, so it goes to the shader as a
+storage buffer, bound whole and subscripted by the fragment stage at an index it
+works out from where the pixel is:
+
+```cpp
+struct SpectrumShader final : ShaderProgram
+{
+    void define() override
+    {
+        // ...x from the varying, then the two bins either side of it
+        auto height = mix(spectrum[index], spectrum[index + 1u], slot - lower);
+        // ...fill, bloom and ridge, all from where the pixel sits against it
+    }
+
+    Uniform<InputBuffer> spectrum;   // one float per display bin
+    Uniform<Float> time;
+    Uniform<Float> level;
+
+    EACP_SHADER(spectrum, time, level)
+};
+```
+
+The bin count is not a uniform and does not need to be: the shader is C++, so
+the constant lands in the generated MSL and HLSL as a literal.
+
+The channel between the threads is a lock-free SPSC fifo carrying **samples**,
+not magnitudes, because the transform runs on the render thread — once per
+displayed frame, from the view's `update()`. That leaves the audio thread doing
+a sum and a copy whatever the transform size is, refreshes the picture as often
+as it is drawn rather than as often as a block arrives, and costs a display
+refresh a few tens of microseconds. `Plugins/SpectrumPlugin/SpectrumAnalyser.h`
+is where that argument is written down.
+
+Formats built for both: AU, VST3 and Standalone.
 
 ## Building
 
