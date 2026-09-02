@@ -1,5 +1,16 @@
+#include "ViewComponent.h"
+
 #include "../native/NativeSurface.h"
 
+#include <eacp/Graphics/Window/EmbeddedView.h>
+
+#include <memory>
+#include <utility>
+
+// The platform halves of NativeSurface. Not translation units of their own:
+// juce_add_module compiles only the sources named after the module itself, so
+// everything under a subdirectory reaches the build by being included from one
+// of those — here, by way of this file.
 #if JUCE_MAC
 #include "../native/NativeSurface_mac.mm"
 #elif JUCE_WINDOWS

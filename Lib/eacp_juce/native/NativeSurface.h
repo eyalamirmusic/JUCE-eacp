@@ -1,5 +1,7 @@
 #pragma once
 
+#include <juce_graphics/juce_graphics.h>
+
 // The three things JUCE has to be able to say to the platform surface that
 // eacp's EmbeddedView created, and the only place in this module where a
 // platform header is reachable.

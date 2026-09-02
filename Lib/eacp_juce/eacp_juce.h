@@ -26,15 +26,12 @@
 
 #pragma once
 
-#define EACP_JUCE_H_INCLUDED
-
-#include <juce_gui_basics/juce_gui_basics.h>
-
-// The umbrella header, which brings View, EmbeddedView and the primitives with
-// it. Nothing platform-specific reaches a consumer through it: every eacp type
+// Just the module's public headers: each one includes what it needs of JUCE and
+// of eacp, so this file has nothing left to bring in. Include it to get the
+// module, or include either header on its own — both compile from cold.
+//
+// Nothing platform-specific reaches a consumer through here. Every eacp type
 // hides its backend behind a Pimpl, so no Cocoa or Win32 header is pulled into
 // a plugin's translation units by including this module.
-#include <eacp/Graphics/Graphics.h>
-
 #include "Helpers/Conversions.h"
 #include "Embedding/ViewComponent.h"

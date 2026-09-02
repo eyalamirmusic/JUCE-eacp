@@ -1,3 +1,5 @@
+#include "NativeSurface.h"
+
 #include <eacp/Core/Utils/WinInclude.h>
 
 namespace EACPJuce::Native

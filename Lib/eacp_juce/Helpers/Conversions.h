@@ -1,5 +1,9 @@
 #pragma once
 
+#include <juce_graphics/juce_graphics.h>
+
+#include <eacp/Graphics/Primitives/Primitives.h>
+
 // Both frameworks have a rectangle, a point and a colour, and a plugin that
 // lays out an eacp view from JUCE bounds crosses between them constantly. The
 // conversions are one-liners; having them written once means a stray

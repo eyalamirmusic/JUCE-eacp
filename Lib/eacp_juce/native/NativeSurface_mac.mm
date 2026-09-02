@@ -1,3 +1,5 @@
+#include "NativeSurface.h"
+
 #import <Cocoa/Cocoa.h>
 
 namespace EACPJuce::Native

@@ -1,5 +1,11 @@
 #pragma once
 
+#include <juce_gui_basics/juce_gui_basics.h>
+
+#include <eacp/Graphics/View/View.h>
+
+#include <memory>
+
 namespace EACPJuce
 {
 
