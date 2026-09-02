@@ -55,7 +55,9 @@ that paints goes in the same slot.
 One caveat, and it is the same one that applies to an OpenGL context or a web
 view: a native surface draws over any JUCE component it overlaps, whatever the
 z-order says. Give it its own rectangle and put JUCE widgets beside it, not on
-it. Both examples do exactly that.
+it. All three examples do exactly that — the third one four times over, with the
+surface a tile in the middle of each panel and the panel's widgets arranged
+around it.
 
 `Lib/eacp_juce/Helpers/Conversions.h` is the rest of the module: `toEACP` /
 `toJUCE` for points, rectangles and colours, since both frameworks have all
@@ -63,7 +65,8 @@ three and an editor crosses between them constantly.
 
 ## The examples
 
-Two, and the second is the first with something real to draw.
+Three. The second is the first with something real to draw; the third is both of
+them four times over, inside a UI that looks like a plugin.
 
 ### `Plugins/ShaderPlugin`
 
@@ -143,7 +146,68 @@ as it is drawn rather than as often as a block arrives, and costs a display
 refresh a few tens of microseconds. `Plugins/SpectrumPlugin/SpectrumAnalyser.h`
 is where that argument is written down.
 
-Formats built for both: AU, VST3 and Standalone.
+### `Plugins/RackPlugin`
+
+Both of the above put one surface in an editor. This one puts four, inside a UI
+made of a dozen JUCE widgets: a rack of four modules — Drive, Tone, Space,
+Width — each with its own shader tile, its own knob, its own bypass and its own
+meter, plus an output trim in the header.
+
+Nothing in `ViewComponent` needed changing for that. It watches the component
+hierarchy, so a panel moving moves the surface inside it; four of them is four
+watchers, and that they share a peer is not something any of them has to know.
+The layout reflows between a row of four and a grid of two by two as the host
+resizes the window, which moves and resizes all four surfaces at once.
+
+The four shaders are four `define()`s and nothing else. They share their
+uniforms, their geometry, their pipeline setup, their smoothing and their bypass
+fade through an ordinary base class, because the shader is a C++ member function
+rather than a file of MSL and a file of HLSL:
+
+```cpp
+struct ModuleShader : ShaderProgram
+{
+    Uniform<Float> time;
+    Uniform<Float> energy;   // what this module's audio is doing
+    Uniform<Float> amount;   // where its knob sits, normalised 0..1
+    Uniform<Float> active;   // 0 bypassed, 1 not — faded, not switched
+    Uniform<Float> aspect;
+
+    EACP_SHADER(time, energy, amount, active, aspect)
+};
+
+struct DriveShader final : ModuleShader { void define() override; /* ... */ };
+```
+
+One view class serves all four (`ModuleView<ShaderType>`), and one table in
+`Modules.h` drives everything downstream of it: the processor creates its
+parameters from that table, the editor builds one panel per row, and each panel
+finds its shader, its parameter, its bypass, its meter and its accent colour by
+the row it was handed. The editor never names a module.
+
+What is worth reading on the audio side, unusually, is the processor. A
+visualizer publishes a level, and a level is the same quantity wherever it is
+taken from; four modules have four different things to say, and saying them is
+what makes four pictures rather than one picture repeated:
+
+| Module | What its meter is |
+| --- | --- |
+| Drive | saturation — how far the shaper bent the loudest sample off a straight line |
+| Tone | balance — where the energy sits, low to high, after the filter |
+| Space | tail — the delay's *own* output, so it outlives the input by the length of the repeats |
+| Width | correlation between the output channels, and a red picture when it goes negative |
+
+Two of those are levels and get a meter's asymmetry; two are positions between
+two ends, for which "fast up, slow down" would be a lie. `Ballistics` is that
+distinction, and it is picked beside the shader rather than in the panel.
+
+The one line this example needs that the single-surface ones do not is
+`setMaxFps(60)`: four continuous views are four display links, and on a 120Hz
+panel that is 480 draws a second for four backdrops. The cap costs nothing
+visible — the skipped ticks fold into the next frame's delta and everything here
+is delta-scaled.
+
+Formats built for all three: AU, VST3 and Standalone.
 
 ## Building
 

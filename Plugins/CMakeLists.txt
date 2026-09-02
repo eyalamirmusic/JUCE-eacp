@@ -9,3 +9,9 @@ add_subdirectory(ShaderPlugin)
 # an FFT, and the spectrum that comes out is what the shader reads — as a
 # storage buffer rather than a uniform, since it is a curve and not a number.
 add_subdirectory(SpectrumPlugin)
+
+# Both of the above put one surface in an editor. This one puts four, inside a
+# UI made of a dozen JUCE widgets: a rack of modules, each with its own shader,
+# its own knob, its own bypass and its own meter — and a layout that reflows
+# under the host's resize, so all four surfaces move at once.
+add_subdirectory(RackPlugin)
