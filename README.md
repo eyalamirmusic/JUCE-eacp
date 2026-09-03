@@ -19,14 +19,19 @@ CMake/          CPM, and the dependency finders
 An eacp `View` is backed by a real platform surface — an `NSView` on macOS, a
 composition-hosted `HWND` on Windows. eacp already knows how to put one of those
 inside a window somebody else owns, because that is what a plugin editor is:
-`eacp::Graphics::EmbeddedView` is that door. What it does not know is *where*
-the surface should sit, because only JUCE knows that.
+`eacp::Graphics::EmbeddedView` is that door. It also knows how to place a
+surface once it is through — `setBounds` takes points, y-down from the host's
+top-left, and every platform call that turns them into a frame is eacp's. What
+it cannot know is *where*, because only JUCE knows that.
 
-`EACPJuce::ViewComponent` is the join. It opens the door onto the peer's native
-handle as soon as the component has a peer, and from then on keeps the surface
-tracking the component's position — through moves, resizes, parent changes,
-being hidden, and the editor being closed and reopened into a different host
-window, which a DAW does routinely.
+`EACPJuce::ViewComponent` is the join, and it is the *where*. It opens the door
+onto the peer's native handle as soon as the component has a peer, and from
+then on keeps the surface tracking the component's position — through moves,
+resizes, parent changes, being hidden, and the editor being closed and reopened
+into a different host window, which a DAW does routinely. The rectangle it
+hands over is `peer->getAreaCoveredBy(component)`, which is already in eacp's
+own space, so the module is portable C++ from top to bottom: it names no
+platform type and links no framework.
 
 Using it is three lines of an editor:
 

@@ -3,7 +3,7 @@ include(CPM)
 CPMAddPackage(
         NAME EACP
         GITHUB_REPOSITORY eyalamirmusic/eacp
-        GIT_TAG main)
+        GIT_TAG develop)
 
 # Every source file in this repository is compiled into a JUCE target, under
 # JUCE's recommended warning set — which is a good deal stricter than the one

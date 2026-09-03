@@ -16,8 +16,7 @@
     license:                MIT
     minimumCppStandard:     20
 
-    dependencies:           juce_gui_basics
-    OSXFrameworks:          Cocoa
+    dependencies:           juce_gui_basics eacp-gpu
 
   END_JUCE_MODULE_DECLARATION
 
@@ -30,8 +29,10 @@
 // of eacp, so this file has nothing left to bring in. Include it to get the
 // module, or include either header on its own — both compile from cold.
 //
-// Nothing platform-specific reaches a consumer through here. Every eacp type
-// hides its backend behind a Pimpl, so no Cocoa or Win32 header is pulled into
-// a plugin's translation units by including this module.
+// Nothing platform-specific reaches a consumer through here, and nothing
+// platform-specific is behind it either: every eacp type hides its backend
+// behind a Pimpl, so no Cocoa or Win32 header is pulled into a plugin's
+// translation units, and the module declares no frameworks of its own because
+// it names no platform type — eacp links what its own surfaces need.
 #include "Helpers/Conversions.h"
 #include "Embedding/ViewComponent.h"

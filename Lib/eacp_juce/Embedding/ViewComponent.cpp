@@ -1,21 +1,11 @@
 #include "ViewComponent.h"
 
-#include "../native/NativeSurface.h"
+#include "../Helpers/Conversions.h"
 
 #include <eacp/Graphics/Window/EmbeddedView.h>
 
 #include <memory>
 #include <utility>
-
-// The platform halves of NativeSurface. Not translation units of their own:
-// juce_add_module compiles only the sources named after the module itself, so
-// everything under a subdirectory reaches the build by being included from one
-// of those — here, by way of this file.
-#if JUCE_MAC
-#include "../native/NativeSurface_mac.mm"
-#elif JUCE_WINDOWS
-#include "../native/NativeSurface_windows.cpp"
-#endif
 
 namespace EACPJuce
 {
@@ -78,7 +68,7 @@ public:
         }
 
         if (embedded != nullptr)
-            Native::setVisible(embedded->getHandle(), owner.isShowing());
+            embedded->setVisible(owner.isShowing());
     }
 
     void componentVisibilityChanged() override { componentPeerChanged(); }
@@ -95,7 +85,11 @@ private:
         embedded = std::make_unique<eacp::Graphics::EmbeddedView>(
             peer.getNativeHandle(), options);
 
-        Native::prepare(embedded->getHandle());
+        // A new surface follows the platform's own scale until it is told
+        // otherwise, so whatever was last pushed at the old one is not in
+        // force here, even when the figure has not changed.
+        currentScale = 0.f;
+
         embedded->setContentView(content);
 
         updateBounds();
@@ -109,16 +103,36 @@ private:
         // The top-level component's peer, not the owner's: they are the same
         // window, but during a teardown the owner can already have been
         // detached while the rectangle is still being asked for.
-        if (auto* peer = owner.getTopLevelComponent()->getPeer())
-            Native::setBounds(embedded->getHandle(),
-                              peer->getAreaCoveredBy(owner),
-                              peer->getPlatformScaleFactor());
+        auto* peer = owner.getTopLevelComponent()->getPeer();
+
+        if (peer == nullptr)
+            return;
+
+        // Before the bounds, which are measured with it. JUCE's figure rather
+        // than the one the surface would read off its own window: in a plugin
+        // the scale is the host's to decide, JUCE has already been told what it
+        // is, and a surface placed by one number inside a window laid out with
+        // another is a surface in the wrong place.
+        auto scale = (float) peer->getPlatformScaleFactor();
+
+        if (!juce::exactlyEqual(std::exchange(currentScale, scale), scale))
+            embedded->setPixelsPerPoint(scale);
+
+        // getAreaCoveredBy is in the space eacp places a surface in already —
+        // points, y-down, relative to the peer — so this is a conversion of
+        // types and not of coordinates.
+        embedded->setBounds(toEACP(peer->getAreaCoveredBy(owner)));
     }
 
     juce::Component& owner;
     eacp::Graphics::View& content;
 
     juce::ComponentPeer* currentPeer = nullptr;
+
+    // Only pushed at the surface when it changes: telling it re-places the
+    // surface, and every move would otherwise do that twice.
+    float currentScale = 0.f;
+
     std::unique_ptr<eacp::Graphics::EmbeddedView> embedded;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Attachment)
