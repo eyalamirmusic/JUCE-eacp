@@ -1,7 +1,7 @@
 include(CPM)
 
 CPMAddPackage(
-        NAME EACP
+        NAME eacp
         GITHUB_REPOSITORY eyalamirmusic/eacp
         GIT_TAG develop)
 

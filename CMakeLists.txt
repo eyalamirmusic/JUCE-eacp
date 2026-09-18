@@ -25,7 +25,7 @@ include(CPM)
 set(EACP_BUILD_WEBVIEW OFF CACHE BOOL "Build eacp's WebView module")
 
 set(CMAKE_FOLDER External)
-find_package(EACP REQUIRED)
+find_package(eacp REQUIRED)
 find_package(JUCE REQUIRED)
 unset(CMAKE_FOLDER)
 
