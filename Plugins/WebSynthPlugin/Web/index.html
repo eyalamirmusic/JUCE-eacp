@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>EACP Web Synth</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<!--
+    The whole editor. Every control is an empty element naming the parameter it
+    shows; main.js fills each one in once the plugin has said what its
+    parameters are, so nothing here repeats a range, a default or a name.
+-->
+<header>
+    <div class="brand">
+        <h1>EACP <span>Web Synth</span></h1>
+        <p>An instrument whose editor is a web page</p>
+    </div>
+    <div class="midi" id="midi">
+        <span class="led"></span>
+        <span class="midi-text">No notes</span>
+    </div>
+</header>
+
+<main>
+    <section class="panel">
+        <h2>Oscillator</h2>
+        <div class="waves" data-param="waveform"></div>
+        <button class="toggle" data-param="mono">
+            <span class="switch"></span>
+            <span class="toggle-label">Mono</span>
+        </button>
+    </section>
+
+    <section class="panel">
+        <h2>Filter</h2>
+        <div class="knobs">
+            <div class="knob" data-param="cutoff"></div>
+            <div class="knob" data-param="resonance"></div>
+        </div>
+    </section>
+
+    <section class="panel">
+        <h2>Envelope</h2>
+        <div class="knobs">
+            <div class="knob" data-param="attack"></div>
+            <div class="knob" data-param="release"></div>
+        </div>
+    </section>
+
+    <section class="panel">
+        <h2>Output</h2>
+        <div class="knobs">
+            <div class="knob" data-param="gain"></div>
+        </div>
+    </section>
+</main>
+
+<footer>
+    <span class="hint">Drag to turn &middot; Shift for fine &middot; Double-click to reset</span>
+    <span class="readout" id="readout"></span>
+</footer>
+
+<script src="main.js"></script>
+</body>
+</html>

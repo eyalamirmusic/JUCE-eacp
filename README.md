@@ -80,9 +80,10 @@ three and an editor crosses between them constantly.
 
 ## The examples
 
-Four. The second is the first with something real to draw; the third is both of
+Five. The second is the first with something real to draw; the third is both of
 them four times over, inside a UI that looks like a plugin; the fourth stops
-giving the surface a rectangle of its own.
+giving the surface a rectangle of its own; the fifth puts a web view in the slot
+instead of a shader, and makes it the whole editor.
 
 ### `Plugins/ShaderPlugin`
 
@@ -272,7 +273,49 @@ Two things it does not get you, and the example is arranged around both:
   anything drawn at the header's contrast would vanish under it.
 - **No mouse.** Both sliders live in the strip below the stage, not on it.
 
-Formats built for all four: AU, VST3 and Standalone.
+### `Plugins/WebSynthPlugin`
+
+An instrument — `IS_SYNTH`, MIDI in — whose editor is an eacp `WebView` and
+nothing else. The title, five knobs, the waveform buttons, the mono switch and
+every readout are HTML, CSS and a page of JavaScript in `Web/`, embedded into
+the binary with ResEmbed and served to the view from memory. It makes no sound:
+the parameters of a small subtractive synth are there to be drawn, dragged and
+automated, and the only thing the audio thread reports is what the MIDI is
+doing.
+
+The editor is the same three lines as the first example's, because a `WebView`
+is an `eacp::Graphics::View` like a `GPUView` is. What is new is the page
+talking back, and that goes over eacp's `WebViewBridge` — typed commands from
+the page, typed events to it — with one class on it:
+
+```cpp
+class ParameterApi
+{
+public:
+    void reflect(Miro::ApiReflector& r)
+    {
+        using T = ParameterApi;
+
+        r.commands<&T::getParameters, &T::beginGesture,
+                   &T::setParameter, &T::endGesture>();
+        r.events<&T::parameterChanged, &T::midiActivity>();
+    }
+    // ...
+};
+```
+
+A drag on a knob is `beginGesture`, a run of `setParameter`, `endGesture`: the
+bracket a host needs to record touch and release. The way back is a
+`juce::ParameterAttachment` per parameter, whose callback publishes
+`parameterChanged` with the normalised value and the parameter's own text, so
+automation, a preset load or a host's generic editor all move the page, and the
+readouts are the strings the host shows in its lanes. The class walks the
+processor for its parameters and names none of them.
+
+Needs `EACP_BUILD_WEBVIEW`, which is on here, and a platform eacp has a web
+runtime for; elsewhere `Plugins/CMakeLists.txt` skips it.
+
+Formats built for all five: AU, VST3 and Standalone.
 
 ## Building
 
@@ -286,7 +329,7 @@ Dependencies (eacp and JUCE) are fetched by CPM; nothing needs installing first.
 | Option | Default | |
 | --- | --- | --- |
 | `JUCE_EACP_ENABLE_EXAMPLES` | on when top-level | Build `Plugins/` |
-| `EACP_BUILD_WEBVIEW` | `OFF` here | eacp's WebView module — turn on for a WebView editor |
+| `EACP_BUILD_WEBVIEW` | `ON` | eacp's WebView module — `WebSynthPlugin` needs it |
 
 ## Supported platforms
 

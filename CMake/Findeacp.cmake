@@ -14,7 +14,11 @@ CPMAddPackage(
 # SYSTEM on the two targets that publish the include root (a CMake 3.25
 # property; this project already requires 3.31) is the whole fix: eacp's headers
 # stop being warned about, and nothing our own sources do is loosened.
-foreach (eacp_target IN ITEMS eacp-core eacp-simd)
+#
+# Miro publishes its own include root, and a web view editor includes it
+# directly — its bridge types are what a page's commands and events are
+# declared with — so it gets the same treatment.
+foreach (eacp_target IN ITEMS eacp-core eacp-simd Miro)
     if (TARGET ${eacp_target})
         set_target_properties(${eacp_target} PROPERTIES SYSTEM ON)
     endif ()

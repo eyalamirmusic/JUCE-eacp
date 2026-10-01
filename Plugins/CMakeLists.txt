@@ -22,3 +22,11 @@ add_subdirectory(RackPlugin)
 # JUCE panel underneath composites through the shader, and a slider sweeps
 # between the two while both halves keep animating.
 add_subdirectory(BlendPlugin)
+
+# An instrument whose editor is a web page and nothing else: eacp's WebView in
+# the same ViewComponent slot the shader views use, with the knobs, buttons and
+# readouts drawn in HTML and bound to the parameters over eacp's WebViewBridge.
+# Only where eacp has a native web runtime to build it on.
+if (TARGET eacp-webview)
+    add_subdirectory(WebSynthPlugin)
+endif ()

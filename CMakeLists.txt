@@ -22,7 +22,7 @@ endif ()
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMake")
 
 include(CPM)
-set(EACP_BUILD_WEBVIEW OFF CACHE BOOL "Build eacp's WebView module")
+set(EACP_BUILD_WEBVIEW ON CACHE BOOL "Build eacp's WebView module")
 
 set(CMAKE_FOLDER External)
 find_package(eacp REQUIRED)
