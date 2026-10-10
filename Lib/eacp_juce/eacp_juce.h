@@ -16,7 +16,7 @@
     license:                MIT
     minimumCppStandard:     20
 
-    dependencies:           juce_gui_basics eacp-gpu
+    dependencies:           juce_gui_basics eacp-ui eacp-gpu
 
   END_JUCE_MODULE_DECLARATION
 
@@ -27,7 +27,7 @@
 
 // Just the module's public headers: each one includes what it needs of JUCE and
 // of eacp, so this file has nothing left to bring in. Include it to get the
-// module, or include either header on its own — both compile from cold.
+// module, or include any one header on its own — each compiles from cold.
 //
 // Nothing platform-specific reaches a consumer through here, and nothing
 // platform-specific is behind it either: every eacp type hides its backend
@@ -36,3 +36,4 @@
 // it names no platform type — eacp links what its own surfaces need.
 #include "Helpers/Conversions.h"
 #include "Embedding/ViewComponent.h"
+#include "Widgets/ResizeGrip.h"
